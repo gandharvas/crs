@@ -42,10 +42,6 @@ func GetCRSDatesFilePath() string {
 func DownloadCRSDates() {
 	const crsCutOffFile = "https://github.com/gandharvas/crs/blob/main/files/crs_cutoff_dates.xlsx?raw=true"
 	filePath := GetCRSDatesFilePath()
-	if _, err := os.Stat("/path/to/whatever"); err != nil {
-		os.Remove(filePath)
-
-	}
 	DownloadFile(crsCutOffFile, filePath)
 
 }

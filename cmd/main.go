@@ -17,7 +17,7 @@ import (
 const KuteGoAPIURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcaeVZK-_yozg3QQwnXStPkcIUvvAxbf-vUw&usqp=CAU"
 
 var crs int
-var crsFilePath string
+var crsFileURL string
 
 func acceptUserScore(estimateITA *widget.Label) *fyne.Container {
 
@@ -32,7 +32,8 @@ func acceptUserScore(estimateITA *widget.Label) *fyne.Container {
 			log.Println("Invalid CRS")
 		}
 		predObj := new(internal.CRS)
-		predObj.Get_crs_distribution(crsFilePath)
+		log.Println("File URL is:", crsFileURL)
+		predObj.Get_crs_distribution(crsFileURL)
 
 		_, ita := internal.Predict(predObj, crs)
 
@@ -54,19 +55,25 @@ func listPreviousDates() fyne.Widget {
 		dates[i] = date
 		i++
 	}
-	list := widget.NewList(
-		func() int {
-			return len(dates)
-		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
-		},
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(dates[i])
-			log.Println(dates[i])
-			crsFilePath = datesMap[dates[i]]
-		})
-	return list
+	//list := widget.NewList(
+	//	func() int {
+	//		return len(dates)
+	//	},
+	//	func() fyne.CanvasObject {
+	//		return widget.NewLabel("template")
+	//	},
+	//	func(i widget.ListItemID, o fyne.CanvasObject) {
+	//		o.(*widget.Label).SetText(dates[i])
+	//		log.Println(dates[i])
+	//		crsFileURL = datesMap[dates[i]]
+	//	})
+
+	combo := widget.NewSelect(dates, func(value string) {
+		log.Println("Select set to", value)
+		crsFileURL = datesMap[value]
+	})
+
+	return combo
 
 }
 
