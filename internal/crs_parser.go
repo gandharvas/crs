@@ -66,7 +66,7 @@ func (c *CRS) GetPreviousTotalInvitesSent() int {
 }
 
 func (c *CRS) GetPreviousDrawDate() time.Time {
-	date, err := time.Parse("MM-DD-YYYY", c.previousDrawDate)
+	date, err := time.Parse("01-02-06", c.previousDrawDate)
 	if err != nil {
 		panic("invalid date")
 	}
@@ -126,7 +126,7 @@ func (c *CRS) readValues() {
 }
 
 func getFilePath() string {
-	return os.TempDir() + "crs_file.xlxs"
+	return os.TempDir() + "/crs_file.xlxs"
 }
 
 func (c *CRS) Get_crs_distribution(url string) {
