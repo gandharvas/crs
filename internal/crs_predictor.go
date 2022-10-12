@@ -3,6 +3,9 @@
 package internal
 
 import (
+	"fmt"
+	"math"
+	"strings"
 	"time"
 )
 
@@ -12,7 +15,8 @@ type Prediction struct {
 	invites int
 }
 
-func Predict(crs *CRS, score int) ([]Prediction, time.Time) {
+func Predict(crs *CRS, score int) (string, time.Time) {
+	var userITA time.Time
 	date := crs.GetPreviousDrawDate()
 	cutOff := crs.GetPreviousDrawCutoff()
 	stepSize := crs.GetPreviousDrawStepsize()
@@ -62,6 +66,7 @@ func Predict(crs *CRS, score int) ([]Prediction, time.Time) {
 		for tempTotalInvites > 0 {
 			if crs.backlog[distriIdx].upperBound == 500 && crs.backlog[distriIdx].lowerBound == 451 {
 				distriIdx++
+				continue
 			}
 			distriBacklog := crs.backlog[distriIdx].candidates
 			if distriBacklog < tempTotalInvites {
@@ -77,14 +82,29 @@ func Predict(crs *CRS, score int) ([]Prediction, time.Time) {
 				newPrediction.cutoff = distri.upperBound - totalPointsToReduce
 				break
 			}
-
-			if crs.backlog[distriIdx].upperBound >= score && crs.backlog[distriIdx].lowerBound <= score {
-				return prediction, newPrediction.date
-			}
 		}
 
 		prediction = append(prediction, newPrediction)
 		date = newDate
 	}
-	return prediction, time.Now()
+	minDiff := math.MaxInt32
+	sBuilder := strings.Builder{}
+	for _, items := range prediction {
+		sBuilder.WriteString(
+			fmt.Sprintf("%v\t\t\t%d\t\t\t\t%d\n", items.date.Format("01-02-2006"), items.invites, items.cutoff))
+		diff := absDiff(score, items.cutoff)
+		if diff < minDiff && items.cutoff <= score {
+			userITA = items.date
+			minDiff = diff
+		}
+	}
+	return sBuilder.String(), userITA
+}
+
+func absDiff(a, b int) int {
+	diff := a - b
+	if diff < 0 {
+		return diff * -1
+	}
+	return diff
 }
