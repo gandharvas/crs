@@ -66,7 +66,7 @@ func (c *CRS) GetPreviousTotalInvitesSent() int {
 }
 
 func (c *CRS) GetPreviousDrawDate() time.Time {
-	date, err := time.Parse("DD-MM-YYYY", c.previousDrawDate)
+	date, err := time.Parse("MM-DD-YYYY", c.previousDrawDate)
 	if err != nil {
 		panic("invalid date")
 	}
@@ -125,13 +125,15 @@ func (c *CRS) readValues() {
 	}
 }
 
-func getFilePath(crsFile string) string {
-	return os.TempDir() + crsFile
+func getFilePath() string {
+	return os.TempDir() + "crs_file.xlxs"
 }
 
-func (c *CRS) Get_crs_distribution(crsFile string) {
+func (c *CRS) Get_crs_distribution(url string) {
+	//Download CRS file
+	DownloadFile(url, getFilePath())
 	// for now the file is static named
-	f, err := excelize.OpenFile(getFilePath(crsFile))
+	f, err := excelize.OpenFile(getFilePath())
 	if err != nil {
 		fmt.Println(err)
 		return
