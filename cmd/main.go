@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -19,7 +21,7 @@ const KuteGoAPIURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcae
 var crs int
 var crsFilePath string
 
-func acceptUserScore(estimateITA *widget.Label) *fyne.Container {
+func acceptUserScore(estimateITA, predictionChart *widget.Label, canadaImage fyne.CanvasObject) *fyne.Container {
 
 	input := widget.NewEntry()
 	input.SetPlaceHolder("Enter your CRS score")
@@ -31,13 +33,22 @@ func acceptUserScore(estimateITA *widget.Label) *fyne.Container {
 		if err != nil {
 			log.Println("Invalid CRS")
 		}
+		log.Println("File path is:", crsFilePath)
 		predObj := new(internal.CRS)
 		predObj.Get_crs_distribution(crsFilePath)
 
-		_, ita := internal.Predict(predObj, crs)
+		predictions, ita := internal.Predict(predObj, crs)
+		sBuilder := strings.Builder{}
+		sBuilder.WriteString("Prediction Chart\nDate\t\t\t Expected Intake\t Expected Cut-Off\n")
+		sBuilder.WriteString(predictions)
 
-		estimateITA.Text = "Your estimated ITA date is: " + ita.Format("DD-MM-YYYY")
+		canadaImage.Hide()
+		estimateITA.Text = fmt.Sprintf("Your estimated ITA date is: %v\n\n", ita.Format("Jan 02, 2006"))
+		estimateITA.TextStyle = fyne.TextStyle{Bold: true}
+		estimateITA.Alignment = fyne.TextAlignCenter
 		estimateITA.Refresh()
+		predictionChart.Text = sBuilder.String()
+		predictionChart.Refresh()
 	}))
 
 	return content
@@ -54,18 +65,10 @@ func listPreviousDates() fyne.Widget {
 		dates[i] = date
 		i++
 	}
-	list := widget.NewList(
-		func() int {
-			return len(dates)
-		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
-		},
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(dates[i])
-			log.Println(dates[i])
-			crsFilePath = datesMap[dates[i]]
-		})
+	list := widget.NewSelect(dates, func(value string) {
+		log.Println("Select set to", value)
+		crsFilePath = datesMap[value]
+	})
 	return list
 
 }
@@ -113,7 +116,7 @@ func main() {
 
 	canadaImage := displayImage()
 
-	dateSeletionText := canvas.NewText("Please select a date of previous draw for prediction", color.Black)
+	dateSeletionText := canvas.NewText("Please select a date of previous draw for prediction", color.NRGBA{255, 0, 0, 255})
 	dateSeletionText.Alignment = fyne.TextAlignCenter
 	dates := listPreviousDates()
 
@@ -121,7 +124,8 @@ func main() {
 	itaDateText.Alignment = fyne.TextAlignCenter
 
 	estimateITA := widget.NewLabel("")
-	userScore := acceptUserScore(estimateITA)
+	predictionChart := widget.NewLabel("")
+	userScore := acceptUserScore(estimateITA, predictionChart, canadaImage)
 
 	// Display a vertical box containing text, image and button
 	box := container.NewVBox(
@@ -131,6 +135,7 @@ func main() {
 		dates,
 		userScore,
 		estimateITA,
+		predictionChart,
 	)
 
 	// Display our content
