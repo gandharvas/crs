@@ -15,6 +15,15 @@ type Prediction struct {
 	invites int
 }
 
+func getInvitesCount(prevInvite, stepSize int) int {
+	inviteCount := prevInvite + stepSize
+
+	if inviteCount > 4750 {
+		return 4750
+	}
+	return inviteCount
+}
+
 func Predict(crs *CRS, score int) (string, time.Time) {
 	var userITA time.Time
 	date := crs.GetPreviousDrawDate()
@@ -58,7 +67,7 @@ func Predict(crs *CRS, score int) (string, time.Time) {
 		}
 		newPrediction := Prediction{}
 		newDate := date.AddDate(0, 0, 14)
-		totalInvites += stepSize
+		totalInvites = getInvitesCount(totalInvites, stepSize)
 
 		newPrediction.date = newDate
 		newPrediction.invites = totalInvites
